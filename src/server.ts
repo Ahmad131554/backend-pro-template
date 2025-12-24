@@ -1,14 +1,23 @@
 // src/server.ts
-import type { Server } from "node:http";
+import { createServer, type Server as HttpServer } from "node:http";
 
 import { createApp } from "./app";
 import { connectMongo, disconnectMongo } from "./config/db.config";
 import { env } from "./config/env.config";
 import AppLogger from "./library/logger";
 
+// ------------------------------------------------------------
+// OPTIONAL SOCKET.IO SETUP (Template-friendly)
+// Uncomment these when you need realtime features.
+// Socket.IO is typically attached to the HTTP server. :contentReference[oaicite:1]{index=1}
+// ------------------------------------------------------------
+// import { initSocket, getIO } from "./realtime/socket";
+
 const app = createApp();
 
-let server: Server | undefined;
+// Always use an HTTP server so enabling Socket.IO later is a one-line change. :contentReference[oaicite:2]{index=2}
+const httpServer: HttpServer = createServer(app);
+
 let shuttingDown = false;
 
 async function startServer() {
@@ -18,18 +27,24 @@ async function startServer() {
     await connectMongo();
     AppLogger.info("Database connected successfully");
 
-    server = app.listen(env.PORT, () => {
+    // ------------------------------------------------------------
+    // OPTIONAL: Initialize Socket.IO
+    // initSocket(httpServer);
+    // AppLogger.info("Socket.IO initialized");
+    // ------------------------------------------------------------
+
+    httpServer.listen(env.PORT, () => {
       AppLogger.info(`Server running on http://localhost:${env.PORT}`);
       AppLogger.info(`Environment: ${env.NODE_ENV}`);
       AppLogger.info(`Health check: http://localhost:${env.PORT}/health`);
       AppLogger.info(`API Base URL: http://localhost:${env.PORT}/api/v1`);
+      // AppLogger.info("Socket.IO: enabled");
     });
 
-    // Graceful shutdown on termination signals (typical for PM2/K8s/systemd). :contentReference[oaicite:3]{index=3}
+    // Graceful shutdown guidance (SIGTERM): stop accepting new requests, finish in-flight, cleanup resources. :contentReference[oaicite:3]{index=3}
     process.on("SIGINT", () => void shutdown("SIGINT"));
     process.on("SIGTERM", () => void shutdown("SIGTERM"));
 
-    // Optional: if you want "let it crash" behavior, keep these minimal and exit after cleanup.
     process.on("unhandledRejection", (reason) => {
       AppLogger.error("Unhandled Rejection", reason as Error);
       void shutdown("SIGTERM");
@@ -37,6 +52,11 @@ async function startServer() {
 
     process.on("uncaughtException", (err) => {
       AppLogger.error("Uncaught Exception", err);
+      void shutdown("SIGTERM");
+    });
+
+    httpServer.on("error", (err) => {
+      AppLogger.error("HTTP server error", err);
       void shutdown("SIGTERM");
     });
   } catch (err) {
@@ -52,15 +72,24 @@ async function shutdown(signal: NodeJS.Signals) {
   AppLogger.info(`${signal} received... shutting down gracefully`);
 
   try {
-    if (server) {
-      await new Promise<void>((resolve, reject) => {
-        server!.close((closeErr) => {
-          if (closeErr) return reject(closeErr);
-          return resolve();
-        });
+    // ------------------------------------------------------------
+    // OPTIONAL: Close Socket.IO (disconnect clients cleanly)
+    // Socket.IO supports middlewares + lifecycle management. :contentReference[oaicite:4]{index=4}
+    // try {
+    //   getIO().close();
+    //   AppLogger.info("Socket.IO closed successfully");
+    // } catch {
+    //   // ignore if sockets are not enabled
+    // }
+    // ------------------------------------------------------------
+
+    await new Promise<void>((resolve, reject) => {
+      httpServer.close((closeErr) => {
+        if (closeErr) return reject(closeErr);
+        return resolve();
       });
-      AppLogger.info("Server closed successfully");
-    }
+    });
+    AppLogger.info("HTTP server closed successfully");
 
     await disconnectMongo();
     AppLogger.info("Database disconnected successfully");
