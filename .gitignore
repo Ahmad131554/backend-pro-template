@@ -302,3 +302,9 @@ bundle-analyzer-report.html
 temp-files/
 cache/
 *.local
+
+# Firebase Specifics
+firebase
+
+# docs
+docs

@@ -8,9 +8,9 @@ import pinoHttp from "pino-http";
 import { routesV1 } from "./routes/index.js";
 import { notFound } from "./middlewares/notFound.js";
 import { errorHandler } from "./middlewares/error.js";
-import { requestLogger } from "./middlewares/requestLogger.js";
-import { securityHeaders, generalRateLimit } from "./middlewares/security.js";
+import { securityHeaders } from "./middlewares/security.js";
 import AppLogger from "./library/logger.js";
+import corsConfig from "./config/cors.config.js";
 
 export function createApp() {
   const app = express();
@@ -41,13 +41,13 @@ export function createApp() {
 
   // Security / common middleware
   app.use(helmet());
-  app.use(cors());
+  app.use(cors(corsConfig));
   app.use(compression());
   app.use(express.json({ limit: "1mb" }));
   app.use(express.urlencoded({ extended: true }));
 
   // General rate limiting
-  app.use(generalRateLimit);
+  // app.use(generalRateLimit);
 
   // Serve uploaded files
   // Your upload middleware saves to: public/uploads/profiles

@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { authenticate } from "../middlewares/auth.js";
-import { requireUser, requireOwnershipOrAdmin } from "../middlewares/permissions.js";
-import { uploadProfilePicture, handleMulterError } from "../middlewares/upload.js";
+import { permit, allUsers, adminOnly } from "../middlewares/permit.js";
+import { uploadProfilePicture, handleMulterError } from "../middlewares/index.js";
 import { userController } from "../controllers/index.js";
+import { RoleType } from "../types/roles.types.js";
 
 export const userRoutes = Router();
 
@@ -10,7 +11,7 @@ export const userRoutes = Router();
 userRoutes.post(
   "/profile-picture",
   authenticate,
-  requireUser,
+  allUsers,
   uploadProfilePicture,
   handleMulterError,
   userController.uploadProfilePicture
@@ -20,7 +21,7 @@ userRoutes.post(
 userRoutes.get(
   "/profile",
   authenticate,
-  requireUser,
+  allUsers,
   userController.getProfile
 );
 
@@ -28,14 +29,14 @@ userRoutes.get(
 userRoutes.put(
   "/profile",
   authenticate,
-  requireUser,
+  allUsers,
   userController.updateProfile
 );
 
-// Admin routes - get any user's profile
+// Admin only - get any user's profile
 userRoutes.get(
   "/:userId",
   authenticate,
-  requireOwnershipOrAdmin('userId'),
+  adminOnly,
   userController.getProfile
 );

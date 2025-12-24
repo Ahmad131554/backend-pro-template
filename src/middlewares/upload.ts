@@ -1,102 +1,90 @@
 import type { ErrorRequestHandler, RequestHandler } from "express";
 import multer from "multer";
-import path from "node:path";
-import fs from "node:fs";
-import { randomUUID } from "node:crypto";
+import { profilePictureUpload, documentUpload } from "../config/multer.config.js";
+import { error } from "../utils/apiResponse.js";
+import { HTTP_STATUS } from "../constants/index.js";
+import AppLogger from "../library/logger.js";
 
-import { error } from "../utils/apiResponse";
+/**
+ * Middleware for uploading profile pictures
+ */
+export const uploadProfilePicture: RequestHandler = profilePictureUpload.single("profilePicture");
 
-// Upload directory: public/uploads/profiles
-const uploadDir = path.join(process.cwd(), "public", "uploads", "profiles");
+/**
+ * Middleware for uploading documents
+ */
+export const uploadDocument: RequestHandler = documentUpload.single("document");
 
-// Ensure upload directory exists
-fs.mkdirSync(uploadDir, { recursive: true });
+/**
+ * Middleware for uploading multiple profile pictures (if needed)
+ */
+export const uploadMultipleProfilePictures: RequestHandler = profilePictureUpload.array("profilePictures", 5);
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const userId = req.user?.id ?? "anonymous";
-    const timestamp = Date.now();
-    const uid = randomUUID();
-
-    // Note: extension is not a security check; it's just for naming.
-    const ext = path.extname(file.originalname).toLowerCase();
-    const filename = `${userId}-${timestamp}-${uid}${ext}`;
-
-    cb(null, filename);
-  },
-});
-
-const allowedMimeTypes = new Set<string>([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-]);
-
-const fileFilter: multer.Options["fileFilter"] = (_req, file, cb) => {
-  if (allowedMimeTypes.has(file.mimetype)) {
-    return cb(null, true);
-  }
-
-  return cb(
-    new Error(
-      "Invalid file type: Only JPEG, PNG, GIF, and WebP images are allowed"
-    )
-  );
-};
-
-const upload = multer({
-  storage,
-  fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
-    files: 1,
-  },
-});
-
-export const uploadProfilePicture: RequestHandler =
-  upload.single("profilePicture");
-
+/**
+ * Generic multer error handler middleware
+ */
 export const handleMulterError: ErrorRequestHandler = (
   err,
-  _req,
+  req,
   res,
   next
 ) => {
-  // Multer limit/field errors
+  // Log the upload error
+  AppLogger.error("File upload error", {
+    error: err.message,
+    userId: req.user?.id,
+    ip: req.ip,
+    userAgent: req.get('User-Agent')
+  });
+
+  // Handle Multer-specific errors
   if (err instanceof multer.MulterError) {
-    if (err.code === "LIMIT_FILE_SIZE") {
-      return error(res, 400, "File size exceeded", {
-        general: "File too large. Maximum size is 5MB",
-      });
-    }
+    switch (err.code) {
+      case "LIMIT_FILE_SIZE":
+        return error(res, HTTP_STATUS.BAD_REQUEST, "File too large. Please upload a smaller file", { 
+          field: err.field,
+          maxSize: "5MB for images, 10MB for documents"
+        });
 
-    if (err.code === "LIMIT_FILE_COUNT") {
-      return error(res, 400, "File limit reached", {
-        general: "Too many files. Only 1 file is allowed",
-      });
-    }
+      case "LIMIT_FILE_COUNT":
+        return error(res, HTTP_STATUS.BAD_REQUEST, "Too many files uploaded", { 
+          field: err.field,
+          maxFiles: "1 file at a time"
+        });
 
-    if (err.code === "LIMIT_UNEXPECTED_FILE") {
-      return error(res, 400, "Invalid field", {
-        general:
-          "Unexpected field name. Use 'profilePicture' as the field name",
-      });
-    }
+      case "LIMIT_UNEXPECTED_FILE":
+        return error(res, HTTP_STATUS.BAD_REQUEST, "Unexpected field name in file upload", { 
+          field: err.field,
+          expectedFields: ["profilePicture", "document"]
+        });
 
-    return error(res, 400, "File upload failed", {
-      general: err.message,
-    });
+      case "LIMIT_PART_COUNT":
+        return error(res, HTTP_STATUS.BAD_REQUEST, "Too many parts in multipart form");
+
+      case "LIMIT_FIELD_KEY":
+        return error(res, HTTP_STATUS.BAD_REQUEST, "Field name too long");
+
+      case "LIMIT_FIELD_VALUE":
+        return error(res, HTTP_STATUS.BAD_REQUEST, "Field value too long");
+
+      case "LIMIT_FIELD_COUNT":
+        return error(res, HTTP_STATUS.BAD_REQUEST, "Too many fields");
+
+      default:
+        return error(res, HTTP_STATUS.BAD_REQUEST, "File upload failed", { error: err.message });
+    }
   }
 
-  // FileFilter or other upload errors
-  if (err) {
-    const message = err instanceof Error ? err.message : "Invalid file upload";
-    return error(res, 400, "File upload failed", { general: message });
+  // Handle custom file filter errors
+  if (err && err.message) {
+    return error(
+      res,
+      HTTP_STATUS.BAD_REQUEST,
+      "Invalid file type",
+      { error: err.message }
+    );
   }
 
-  return next();
+  // If it's not a multer error, pass it to the next error handler
+  next(err);
 };

@@ -1,10 +1,10 @@
 // src/server.ts
 import type { Server } from "node:http";
 
-import { createApp } from "./app.js";
-import { connectMongo, disconnectMongo } from "./config/db.config.js";
-import { env } from "./config/env.config.js";
-import AppLogger from "./library/logger.js";
+import { createApp } from "./app";
+import { connectMongo, disconnectMongo } from "./config/db.config";
+import { env } from "./config/env.config";
+import AppLogger from "./library/logger";
 
 const app = createApp();
 
@@ -13,16 +13,16 @@ let shuttingDown = false;
 
 async function startServer() {
   try {
-    AppLogger.info("🚀 Starting server...");
-    
+    AppLogger.info("Starting server...");
+
     await connectMongo();
-    AppLogger.info("✅ Database connected successfully");
+    AppLogger.info("Database connected successfully");
 
     server = app.listen(env.PORT, () => {
-      AppLogger.info(`🚀 Server running on http://localhost:${env.PORT}`);
-      AppLogger.info(`📱 Environment: ${env.NODE_ENV}`);
-      AppLogger.info(`🔗 Health check: http://localhost:${env.PORT}/health`);
-      AppLogger.info(`📚 API Base URL: http://localhost:${env.PORT}/api/v1`);
+      AppLogger.info(`Server running on http://localhost:${env.PORT}`);
+      AppLogger.info(`Environment: ${env.NODE_ENV}`);
+      AppLogger.info(`Health check: http://localhost:${env.PORT}/health`);
+      AppLogger.info(`API Base URL: http://localhost:${env.PORT}/api/v1`);
     });
 
     // Graceful shutdown on termination signals (typical for PM2/K8s/systemd). :contentReference[oaicite:3]{index=3}
@@ -49,7 +49,7 @@ async function shutdown(signal: NodeJS.Signals) {
   if (shuttingDown) return;
   shuttingDown = true;
 
-  AppLogger.info(`💫 ${signal} received... shutting down gracefully`);
+  AppLogger.info(`${signal} received... shutting down gracefully`);
 
   try {
     if (server) {
@@ -59,16 +59,16 @@ async function shutdown(signal: NodeJS.Signals) {
           return resolve();
         });
       });
-      AppLogger.info("✅ Server closed successfully");
+      AppLogger.info("Server closed successfully");
     }
 
     await disconnectMongo();
-    AppLogger.info("✅ Database disconnected successfully");
+    AppLogger.info("Database disconnected successfully");
 
-    AppLogger.info("🎯 Graceful shutdown completed");
+    AppLogger.info("Graceful shutdown completed");
     process.exit(0);
   } catch (err) {
-    AppLogger.error("❌ Error during shutdown", err as Error);
+    AppLogger.error("Error during shutdown", err as Error);
     process.exit(1);
   }
 }
