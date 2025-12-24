@@ -2,7 +2,7 @@
 import type { Socket } from "socket.io";
 import jwt from "jsonwebtoken";
 
-import { env } from "../../config/env";
+import { env } from "../../config/env.config";
 import User from "../../models/user.model";
 import ApiError from "../../utils/ApiError";
 import type { AccessTokenPayload, SocketData } from "./types";

@@ -1,5 +1,6 @@
 import type { IUser } from "../models/user.model";
 import User from "../models/user.model";
+import Role from "../models/role.model";
 import ApiError from "../utils/ApiError";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -44,8 +45,8 @@ const sanitizeUser = (user: any): PublicUserDto => {
   const { password, resetPasswordOtp, resetPasswordOtpExpiry, ...publicUser } =
     userObject;
   return {
-    ...publicUser,
     _id: userObject._id.toString(),
+    ...publicUser,
   };
 };
 
@@ -53,6 +54,10 @@ export const register = async (
   userData: RegisterRequestDto
 ): Promise<LoginResponseDto> => {
   const { email, username, password } = userData;
+  const profilePicture =
+    userData.profilePicture && userData.profilePicture.trim() !== ""
+      ? userData.profilePicture
+      : null;
 
   // Check if user already exists
   const existingUser = await User.findOne({
@@ -68,6 +73,15 @@ export const register = async (
     }
   }
 
+  // Get default user role
+  const userRole = await Role.findOne({ name: "user" });
+  if (!userRole) {
+    throw new ApiError(
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      "Default user role not found"
+    );
+  }
+
   // Hash the password
   const hashedPassword = await bcrypt.hash(password, 12);
 
@@ -76,13 +90,18 @@ export const register = async (
     email,
     username,
     password: hashedPassword,
+    role: userRole._id,
+    profilePicture,
   });
 
   await user.save();
 
+  await user.populate("role");
+
   AppLogger.auth("New user registered", user._id.toString(), {
     username,
     email,
+    profilePicture,
   });
 
   // Generate access token
@@ -99,8 +118,10 @@ export const login = async (
 ): Promise<LoginResponseDto> => {
   const { email, password } = loginData;
 
-  // Find user by email
-  const user = await User.findOne({ email }).select("+password");
+  // Find user by email with role populated
+  const user = await User.findOne({ email })
+    .select("+password")
+    .populate("role");
   if (!user) {
     throw new ApiError(HTTP_STATUS.UNAUTHORIZED, "Invalid email or password");
   }

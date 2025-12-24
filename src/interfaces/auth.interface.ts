@@ -1,10 +1,11 @@
-import type { IUser } from '../models/user.model.js';
+import type { IUser } from "../models/user.model.js";
 
 // Request DTOs (Data Transfer Objects)
 export interface RegisterRequestDto {
   email: string;
   username: string;
   password: string;
+  profilePicture?: string;
 }
 
 export interface LoginRequestDto {
@@ -28,7 +29,10 @@ export interface ResetPasswordRequestDto {
 }
 
 // Response DTOs
-export interface PublicUserDto extends Omit<IUser, 'password' | 'resetPasswordOtp' | 'resetPasswordOtpExpiry'> {
+export interface PublicUserDto extends Omit<
+  IUser,
+  "password" | "resetPasswordOtp" | "resetPasswordOtpExpiry"
+> {
   _id: string;
 }
 
@@ -46,7 +50,7 @@ export interface VerifyOtpResponseDto {
 // Internal service types
 export interface ResetTokenPayload {
   sub: string;
-  type: 'password-reset';
+  type: "password-reset";
   email: string;
   iat?: number;
   exp?: number;
@@ -54,7 +58,7 @@ export interface ResetTokenPayload {
 
 export interface AccessTokenPayload {
   sub: string;
-  role?: string;
+  role?: string; // role name (user/admin) for token payload
   iat?: number;
   exp?: number;
 }

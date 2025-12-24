@@ -1,12 +1,12 @@
 import mongoose, { type HydratedDocument, type Model } from "mongoose";
-
-export type UserRole = "user" | "admin";
+import type { IRole } from "./role.model.js";
 
 export interface IUser {
   username: string;
   email: string;
   password: string; // bcrypt hash
-  role: UserRole;
+  role: mongoose.Types.ObjectId | IRole; // reference to Role model
+  profilePicture?: string | null; // optional profile picture filename
 
   // Password reset (OTP) - optional
   resetPasswordOtp?: string;
@@ -42,12 +42,14 @@ const userSchema = new Schema<IUser>(
       required: [true, "Password is required"],
     },
     role: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Role",
+      required: [true, "Role is required"],
+    },
+    profilePicture: {
       type: String,
-      enum: {
-        values: ["user", "admin"],
-        message: "Role must be either user or admin",
-      },
-      default: "user",
+      required: false,
+      default: null,
     },
 
     // OTP reset fields (optional)

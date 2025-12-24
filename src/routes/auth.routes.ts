@@ -8,6 +8,7 @@ import {
 } from "../validators/auth.validation.js";
 import { runValidations } from "../middlewares/validate.js";
 import { authRateLimit } from "../middlewares/security.js";
+import { uploadProfilePicture, handleMulterError } from "../middlewares/index.js";
 import { authController } from "../controllers/index.js";
 
 export const authRoutes = Router();
@@ -15,6 +16,8 @@ export const authRoutes = Router();
 // Public authentication routes with rate limiting
 authRoutes.post(
   "/register",
+  uploadProfilePicture,
+  handleMulterError,
   runValidations(registerRules),
   authController.register
 );

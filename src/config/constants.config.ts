@@ -12,7 +12,7 @@ export const APP_CONFIG = {
   // File Upload Configuration
   UPLOADS: {
     MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
-    ALLOWED_IMAGE_TYPES: ["image/jpeg", "image/png", "image/webp"],
+    ALLOWED_IMAGE_TYPES: ["image/jpeg", "image/png", "image/webp", "image/jpg"],
     PROFILE_PICTURE_PATH: "uploads/profiles/",
   },
 

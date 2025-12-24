@@ -12,5 +12,9 @@ export interface AuthenticatedUser {
   id: string;
   username: string;
   email: string;
-  role: string;
+  role: {
+    _id: string;
+    name: string;
+    description?: string;
+  };
 }

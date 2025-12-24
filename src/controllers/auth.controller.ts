@@ -7,11 +7,12 @@ import type {
   LoginRequestDto,
   ForgotPasswordRequestDto,
   VerifyOtpRequestDto,
-  ResetPasswordRequestDto
+  ResetPasswordRequestDto,
 } from "../interfaces/auth.interface.js";
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
   const userData: RegisterRequestDto = req.body;
+  // const file = req.file;
 
   const result = await authService.register(userData);
 

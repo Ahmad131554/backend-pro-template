@@ -1,38 +1,11 @@
 import User from "../models/user.model.js";
 import ApiError from "../utils/ApiError.js";
 import { HTTP_STATUS } from "../constants/index.js";
-import type { UploadProfilePictureResponseDto } from "../interfaces/user.interface.js";
-
-export const uploadProfilePicture = async (
-  userId: string, 
-  file: Express.Multer.File
-): Promise<UploadProfilePictureResponseDto> => {
-  if (!file) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, "No file uploaded");
-  }
-
-  // Update user's profile picture
-  const user = await User.findByIdAndUpdate(
-    userId,
-    { profilePicture: file.filename },
-    { new: true }
-  );
-
-  if (!user) {
-    throw new ApiError(HTTP_STATUS.NOT_FOUND, "User not found");
-  }
-
-  return {
-    profilePictureUrl: `/uploads/profiles/${file.filename}`,
-    filename: file.filename,
-    size: file.size,
-    mimetype: file.mimetype,
-    uploadedBy: userId
-  };
-};
 
 export const getUserProfile = async (userId: string) => {
-  const user = await User.findById(userId).select('-password -resetPasswordOtp -resetPasswordOtpExpiry');
+  const user = await User.findById(userId)
+    .select('-password -resetPasswordOtp -resetPasswordOtpExpiry')
+    .populate('role');
   
   if (!user) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "User not found");
@@ -66,7 +39,7 @@ export const updateUserProfile = async (userId: string, updateData: Partial<{ us
     userId,
     { $set: updateData },
     { new: true, runValidators: true }
-  ).select('-password -resetPasswordOtp -resetPasswordOtpExpiry');
+  ).select('-password -resetPasswordOtp -resetPasswordOtpExpiry').populate('role');
 
   if (!user) {
     throw new ApiError(404, "User not found");

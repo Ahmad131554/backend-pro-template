@@ -3,19 +3,6 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { apiResponse } from "../utils/apiResponse";
 import { userService } from "../services";
 
-export const uploadProfilePicture = asyncHandler(
-  async (req: Request, res: Response) => {
-    const userId = req.user?.id;
-    const file = req.file;
-
-    const result = await userService.uploadProfilePicture(userId!, file!);
-
-    res
-      .status(200)
-      .json(apiResponse(200, result, "Profile picture uploaded successfully"));
-  }
-);
-
 export const getProfile = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user?.id;
 

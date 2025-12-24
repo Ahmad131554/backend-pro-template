@@ -23,8 +23,8 @@ export const permit = (allowedRoles: RoleType[]) => {
       );
     }
 
-    // Check if user's role is allowed
-    const userRole = user.role as RoleType;
+    const userRole = user.role.name as RoleType;
+    // const userRole = (typeof user.role === 'object' && user.role.name) ? user.role.name as RoleType : user.role as RoleType;
 
     if (!allowedRoles.includes(userRole)) {
       AppLogger.security("Access denied - insufficient permissions", "high", {
@@ -49,9 +49,6 @@ export const permit = (allowedRoles: RoleType[]) => {
 
 // Convenience exports for common permissions
 export const adminOnly = permit([RoleType.ADMIN]);
-export const adminAndModerator = permit([RoleType.ADMIN, RoleType.MODERATOR]);
-export const allUsers = permit([
-  RoleType.ADMIN,
-  RoleType.MODERATOR,
-  RoleType.USER,
-]);
+export const usernly = permit([RoleType.USER]);
+export const adminAndUser = permit([RoleType.ADMIN, RoleType.USER]);
+export const allUsers = permit([RoleType.ADMIN, RoleType.USER]);
