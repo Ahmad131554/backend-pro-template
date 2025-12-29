@@ -2,7 +2,6 @@ import type { Request, Response, NextFunction } from "express";
 import ApiError from "../utils/ApiError";
 import { HTTP_STATUS } from "../constants/index";
 import { RoleType } from "../interfaces/role.interface";
-import AppLogger from "../library/logger";
 
 /**
  * Simple permission middleware - permit([RoleType.ADMIN])
@@ -12,33 +11,19 @@ export const permit = (allowedRoles: RoleType[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
 
-    // Check if user is authenticated
+    // Check if user is authenticated (should be handled by auth middleware)
     if (!user) {
-      AppLogger.security("Access attempt without authentication", "medium", {
-        ip: req.ip,
-        url: req.url,
-      });
       return next(
         new ApiError(HTTP_STATUS.UNAUTHORIZED, "Authentication required")
       );
     }
 
-    const userRole = user.role.name as RoleType;
-    // const userRole = (typeof user.role === 'object' && user.role.name) ? user.role.name as RoleType : user.role as RoleType;
+    // Get user role from populated user data
+    const userRole = user.role?.name as RoleType;
 
-    if (!allowedRoles.includes(userRole)) {
-      AppLogger.security("Access denied - insufficient permissions", "high", {
-        userId: user.id,
-        userRole,
-        requiredRoles: allowedRoles,
-        ip: req.ip,
-        url: req.url,
-      });
+    if (!userRole || !allowedRoles.includes(userRole)) {
       return next(
-        new ApiError(
-          HTTP_STATUS.FORBIDDEN,
-          "Access denied - insufficient permissions"
-        )
+        new ApiError(HTTP_STATUS.FORBIDDEN, "Access denied")
       );
     }
 
@@ -49,6 +34,5 @@ export const permit = (allowedRoles: RoleType[]) => {
 
 // Convenience exports for common permissions
 export const adminOnly = permit([RoleType.ADMIN]);
-export const usernly = permit([RoleType.USER]);
-export const adminAndUser = permit([RoleType.ADMIN, RoleType.USER]);
+export const userOnly = permit([RoleType.USER]);
 export const allUsers = permit([RoleType.ADMIN, RoleType.USER]);

@@ -5,12 +5,12 @@ import compression from "compression";
 import path from "node:path";
 import pinoHttp from "pino-http";
 
-import { routesV1 } from "./routes/index.js";
-import { notFound } from "./middlewares/notFound.js";
-import { errorHandler } from "./middlewares/error.js";
-import { securityHeaders } from "./middlewares/security.js";
-import AppLogger from "./library/logger.js";
-import corsConfig from "./config/cors.config.js";
+import { routesV1 } from "./routes/index";
+import { notFound } from "./middlewares/notFound";
+import { errorHandler } from "./middlewares/error";
+import { securityHeaders } from "./middlewares/security";
+import AppLogger from "./library/logger";
+import corsConfig from "./config/cors.config";
 
 export function createApp() {
   const app = express();

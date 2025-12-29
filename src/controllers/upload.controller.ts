@@ -5,7 +5,7 @@ import { uploadService } from "../services";
 
 export const uploadProfilePicture = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.user?.id;
+    const userId = req.user?._id?.toString();
     const file = req.file;
 
     const result = await uploadService.uploadProfilePicture(userId!, file!);
@@ -18,7 +18,7 @@ export const uploadProfilePicture = asyncHandler(
 
 export const uploadDocument = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.user?.id;
+    const userId = req.user?._id?.toString();
     const file = req.file;
 
     const result = await uploadService.uploadDocument(userId!, file!);

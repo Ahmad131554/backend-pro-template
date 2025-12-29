@@ -29,6 +29,19 @@ export const registerRules: ValidationChain[] = [
     .bail()
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
+
+  body("role")
+    .optional()
+    .isString()
+    .withMessage("Role must be a string")
+    .bail()
+    .trim()
+    .notEmpty()
+    .withMessage("Role cannot be empty if provided")
+    .bail()
+    .toLowerCase()
+    .isIn(["user", "admin"])
+    .withMessage("Role must be either 'user' or 'admin'"),
 ];
 
 export const loginRules: ValidationChain[] = [

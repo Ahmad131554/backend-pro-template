@@ -35,9 +35,10 @@ export const authenticate: RequestHandler = asyncHandler(
       throw new ApiError(401, "Authentication Failed: Invalid token payload");
     }
 
-    const user = await User.findById(decoded.sub).select(
-      "-password -resetPasswordOtp -resetPasswordOtpExpiry"
-    );
+    const user = await User.findById(decoded.sub)
+      .select("-password -resetPasswordOtp -resetPasswordOtpExpiry")
+      .populate("role");
+    
     if (!user) {
       AppLogger.security("Authentication with invalid user ID", "high", {
         userId: decoded.sub,
@@ -46,12 +47,8 @@ export const authenticate: RequestHandler = asyncHandler(
       throw new ApiError(401, "Authentication Failed: User not found");
     }
 
-    req.user = {
-      id: user._id.toString(),
-      username: user.username,
-      email: user.email,
-      role: user.role || "user",
-    };
+    // Store complete user data for permit middleware to use
+    req.user = user;
 
     AppLogger.auth("User authenticated successfully", user._id.toString(), {
       method: req.method,

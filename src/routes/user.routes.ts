@@ -1,8 +1,7 @@
 import { Router } from "express";
-import { authenticate } from "../middlewares/auth.js";
-import { allUsers, adminOnly } from "../middlewares/permit.js";
-import { userController } from "../controllers/index.js";
-import { RoleType } from "../interfaces/role.interface.js";
+import { authenticate } from "../middlewares/auth";
+import { allUsers, adminOnly } from "../middlewares/permit";
+import { userController } from "../controllers/index";
 
 export const userRoutes = Router();
 

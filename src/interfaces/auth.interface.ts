@@ -6,6 +6,7 @@ export interface RegisterRequestDto {
   username: string;
   password: string;
   profilePicture?: string;
+  role?: string; // Optional role name (e.g., 'user', 'admin')
 }
 
 export interface LoginRequestDto {
@@ -31,7 +32,7 @@ export interface ResetPasswordRequestDto {
 // Response DTOs
 export interface LoginResponseDto {
   user: PublicUserDto;
-  token: string;
+  token?: string;
 }
 
 export interface VerifyOtpResponseDto {

@@ -23,7 +23,7 @@ export function registerCoreHandlers(
   >
 ) {
   io.on("connection", (socket) => {
-    const userId = socket.data.user?.id;
+    const userId = socket.data.user?._id?.toString();
 
     // Put the user into a predictable room for targeted emits:
     // io.to(`user:${userId}`).emit(...)

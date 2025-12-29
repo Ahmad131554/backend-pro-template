@@ -52,7 +52,7 @@ const sanitizeUser = (user: any): PublicUserDto => {
 export const register = async (
   userData: RegisterRequestDto
 ): Promise<LoginResponseDto> => {
-  const { email, username, password } = userData;
+  const { email, username, password, role: requestedRole } = userData;
   const profilePicture =
     userData.profilePicture && userData.profilePicture.trim() !== ""
       ? userData.profilePicture
@@ -72,13 +72,13 @@ export const register = async (
     }
   }
 
-  // Get default user role
-  const userRole = await Role.findOne({ name: "user" });
+  // Determine which role to assign and normalize it
+  const roleName = requestedRole ? requestedRole.toLowerCase().trim() : "user"; // Default to 'user' if no role provided
+
+  // Find the role in database
+  const userRole = await Role.findOne({ name: roleName });
   if (!userRole) {
-    throw new ApiError(
-      HTTP_STATUS.INTERNAL_SERVER_ERROR,
-      "Default user role not found"
-    );
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Role '${roleName}' not found`);
   }
 
   // Hash the password
@@ -95,20 +95,21 @@ export const register = async (
 
   await user.save();
 
+  // Populate role field to return in response
   await user.populate("role");
 
   AppLogger.auth("New user registered", user._id.toString(), {
     username,
     email,
     profilePicture,
+    role: roleName,
   });
 
   // Generate access token
-  const token = generateAccessToken(user._id.toString());
+  // const token = generateAccessToken(user._id.toString());
 
   return {
     user: sanitizeUser(user),
-    token,
   };
 };
 

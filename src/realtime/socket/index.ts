@@ -2,7 +2,7 @@
 import type { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
 
-import { env } from "../../config/env";
+import { env } from "../../config/env.config";
 import { socketAuthMiddleware } from "./auth";
 import { registerCoreHandlers } from "./handlers/core.handlers";
 import type {

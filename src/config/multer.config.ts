@@ -54,7 +54,7 @@ const documentStorage = multer.diskStorage({
     cb(null, UPLOAD_CONFIG.DOCUMENTS);
   },
   filename: (req, file, cb) => {
-    const userId = req.user?.id ?? "anonymous";
+    const userId = req.user?._id?.toString() ?? "anonymous";
     const timestamp = Date.now();
     const uid = randomUUID();
     const ext = path.extname(file.originalname).toLowerCase();

@@ -4,7 +4,7 @@ import { apiResponse } from "../utils/apiResponse";
 import { userService } from "../services";
 
 export const getProfile = asyncHandler(async (req: Request, res: Response) => {
-  const userId = req.user?.id;
+  const userId = req.user?._id?.toString();
 
   const result = await userService.getUserProfile(userId!);
 
@@ -15,7 +15,7 @@ export const getProfile = asyncHandler(async (req: Request, res: Response) => {
 
 export const updateProfile = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.user?.id;
+    const userId = req.user?._id?.toString();
     const updateData = req.body;
 
     const result = await userService.updateUserProfile(userId!, updateData);

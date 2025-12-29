@@ -32,7 +32,7 @@ export const handleMulterError: ErrorRequestHandler = (
   // Log the upload error
   AppLogger.error("File upload error", {
     error: err.message,
-    userId: req.user?.id,
+    userId: req.user?._id?.toString(),
     ip: req.ip,
     userAgent: req.get('User-Agent')
   });
