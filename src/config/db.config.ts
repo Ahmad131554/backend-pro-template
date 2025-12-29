@@ -1,5 +1,6 @@
 // src/config/db.ts
 import mongoose from "mongoose";
+import AppLogger from "../library/logger";
 import { env } from "./env.config";
 
 let connected = false;
@@ -16,10 +17,10 @@ export async function connectMongo(): Promise<typeof mongoose> {
     });
 
     connected = true;
-    console.log("MongoDB connected successfully");
+    AppLogger.info("MongoDB connected successfully");
     return mongoose;
   } catch (err) {
-    console.error("MongoDB connection failed:", err);
+    AppLogger.error(`MongoDB connection failed:, ${err}`);
     throw err;
   }
 }
