@@ -1,5 +1,4 @@
 // src/realtime/socket/types.ts
-import type { JwtPayload } from "jsonwebtoken";
 
 export type SocketUser = {
   id: string;
@@ -8,10 +7,7 @@ export type SocketUser = {
   role: string;
 };
 
-export type AccessTokenPayload = JwtPayload & {
-  sub: string; // user id
-  role?: string;
-};
+// Note: AccessTokenPayload is now imported from interfaces/auth.interface.ts
 
 export interface ServerToClientEvents {
   // Core

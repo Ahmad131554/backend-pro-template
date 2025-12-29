@@ -1,6 +1,6 @@
 // src/config/db.ts
 import mongoose from "mongoose";
-import { env } from "./env.config.js"; // NodeNext ESM: keep .js extension in TS source
+import { env } from "./env.config";
 
 let connected = false;
 

@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import ApiError from "../utils/ApiError";
 import { HTTP_STATUS } from "../constants/index";
-import { RoleType } from "../types/roles.types";
+import { RoleType } from "../interfaces/role.interface";
 import AppLogger from "../library/logger";
 
 /**

@@ -1,11 +1,5 @@
 import mongoose from "mongoose";
-
-export interface IRole {
-  name: string; // 'user' or 'admin'
-  description?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+import { IRole } from "../interfaces/role.interface";
 
 const roleSchema = new mongoose.Schema<IRole>(
   {
@@ -21,7 +15,6 @@ const roleSchema = new mongoose.Schema<IRole>(
     },
     description: {
       type: String,
-      required: false,
     },
   },
   {
@@ -33,30 +26,5 @@ const roleSchema = new mongoose.Schema<IRole>(
 roleSchema.index({ name: 1 });
 
 const Role = mongoose.model<IRole>("Role", roleSchema);
-
-// Initialize default roles
-export const initializeRoles = async () => {
-  try {
-    const userRole = await Role.findOne({ name: "user" });
-    if (!userRole) {
-      await Role.create({
-        name: "user",
-        description: "Standard user role",
-      });
-    }
-
-    const adminRole = await Role.findOne({ name: "admin" });
-    if (!adminRole) {
-      await Role.create({
-        name: "admin",
-        description: "Administrator role",
-      });
-    }
-    
-    console.log("Roles initialized successfully");
-  } catch (error) {
-    console.error("Error initializing roles:", error);
-  }
-};
 
 export default Role;

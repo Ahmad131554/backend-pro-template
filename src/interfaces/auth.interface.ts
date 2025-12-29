@@ -1,4 +1,4 @@
-import type { IUser } from "../models/user.model.js";
+import { IUser, PublicUserDto } from "./user.interface";
 
 // Request DTOs (Data Transfer Objects)
 export interface RegisterRequestDto {
@@ -29,13 +29,6 @@ export interface ResetPasswordRequestDto {
 }
 
 // Response DTOs
-export interface PublicUserDto extends Omit<
-  IUser,
-  "password" | "resetPasswordOtp" | "resetPasswordOtpExpiry"
-> {
-  _id: string;
-}
-
 export interface LoginResponseDto {
   user: PublicUserDto;
   token: string;

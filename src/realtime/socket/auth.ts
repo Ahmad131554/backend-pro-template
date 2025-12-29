@@ -5,7 +5,8 @@ import jwt from "jsonwebtoken";
 import { env } from "../../config/env.config";
 import User from "../../models/user.model";
 import ApiError from "../../utils/ApiError";
-import type { AccessTokenPayload, SocketData } from "./types";
+import type { AccessTokenPayload } from "../../interfaces/auth.interface";
+import type { SocketData } from "./types";
 
 function isAccessTokenPayload(value: unknown): value is AccessTokenPayload {
   return (

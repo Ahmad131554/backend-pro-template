@@ -6,6 +6,7 @@ import type {
   InterServerEvents,
   SocketData,
 } from "../types";
+import type { AccessTokenPayload } from "../../../interfaces/auth.interface";
 
 /**
  * Core handlers that are useful in almost every project:

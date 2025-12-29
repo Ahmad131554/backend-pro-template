@@ -2,7 +2,7 @@ import multer from "multer";
 import path from "node:path";
 import fs from "node:fs";
 import { randomUUID } from "node:crypto";
-import { APP_CONFIG } from "./constants.config.js";
+import { APP_CONFIG } from "./constants.config";
 
 // Upload configurations
 export const UPLOAD_CONFIG = {

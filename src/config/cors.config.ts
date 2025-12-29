@@ -1,5 +1,5 @@
 import type { CorsOptions } from "cors";
-import { env } from "./env.config.js";
+import { env } from "./env.config";
 
 // CORS configuration for different environments
 const corsConfig: CorsOptions = {

@@ -1,5 +1,23 @@
-// User-related types and interfaces
+import { IRole } from "./role.interface";
 
+export interface IUser {
+  _id?: string;
+  username: string;
+  email: string;
+  password: string; // bcrypt hash
+  role: IRole; // reference to Role model
+  profilePicture?: string | null; // optional profile picture filename
+
+  // Password reset (OTP) - optional
+  resetPasswordOtp?: string;
+  resetPasswordOtpExpiry?: Date;
+
+  // timestamps (added by Mongoose when timestamps: true)
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// User-related DTOs and response types
 export interface UploadProfilePictureResponseDto {
   profilePictureUrl: string;
   filename: string;
@@ -17,4 +35,11 @@ export interface AuthenticatedUser {
     name: string;
     description?: string;
   };
+}
+
+export interface PublicUserDto extends Omit<
+  IUser,
+  "password" | "resetPasswordOtp" | "resetPasswordOtpExpiry"
+> {
+  _id: string;
 }
