@@ -6,7 +6,7 @@ export interface RegisterRequestDto {
   username: string;
   password: string;
   profilePicture?: string;
-  role?: string; // Optional role name (e.g., 'user', 'admin')
+  // Note: role is not included - register endpoint only creates 'user' role accounts
 }
 
 export interface LoginRequestDto {

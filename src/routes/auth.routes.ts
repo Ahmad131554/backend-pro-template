@@ -8,7 +8,10 @@ import {
 } from "../validators/auth.validation.js";
 import { runValidations } from "../middlewares/validate.js";
 import { authRateLimit } from "../middlewares/security.js";
-import { uploadProfilePicture, handleMulterError } from "../middlewares/index.js";
+import {
+  uploadProfilePicture,
+  handleMulterError,
+} from "../middlewares/index.js";
 import { authController } from "../controllers/index.js";
 
 export const authRoutes = Router();
@@ -26,7 +29,6 @@ authRoutes.post("/login", runValidations(loginRules), authController.login);
 
 authRoutes.post(
   "/forgot-password",
-  authRateLimit,
   runValidations(forgotPasswordRules),
   authController.forgotPassword
 );

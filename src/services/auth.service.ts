@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env.config";
 import { HTTP_STATUS, TOKEN_EXPIRES, OTP_CONFIG } from "../constants/index";
 import AppLogger from "../library/logger";
+import emailService from "./email.service";
 import type {
   RegisterRequestDto,
   LoginRequestDto,
@@ -52,7 +53,7 @@ const sanitizeUser = (user: any): PublicUserDto => {
 export const register = async (
   userData: RegisterRequestDto
 ): Promise<LoginResponseDto> => {
-  const { email, username, password, role: requestedRole } = userData;
+  const { email, username, password } = userData;
   const profilePicture =
     userData.profilePicture && userData.profilePicture.trim() !== ""
       ? userData.profilePicture
@@ -72,13 +73,13 @@ export const register = async (
     }
   }
 
-  // Determine which role to assign and normalize it
-  const roleName = requestedRole ? requestedRole.toLowerCase().trim() : "user"; // Default to 'user' if no role provided
-
-  // Find the role in database
-  const userRole = await Role.findOne({ name: roleName });
+  // Get default user role (always 'user' for public registration)
+  const userRole = await Role.findOne({ name: "user" });
   if (!userRole) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Role '${roleName}' not found`);
+    throw new ApiError(
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      "Default user role not found"
+    );
   }
 
   // Hash the password
@@ -102,11 +103,8 @@ export const register = async (
     username,
     email,
     profilePicture,
-    role: roleName,
+    role: "user",
   });
-
-  // Generate access token
-  // const token = generateAccessToken(user._id.toString());
 
   return {
     user: sanitizeUser(user),
@@ -145,10 +143,16 @@ export const forgotPassword = async (
   requestData: ForgotPasswordRequestDto
 ): Promise<{ message: string }> => {
   const { email } = requestData;
+  console.log("Got forget pass req for this email--->", email);
 
   const user = await User.findOne({ email });
+  console.log("user fetched from database--->", user);
   if (!user) {
-    throw new ApiError(404, "User not found with this email");
+    // For security, don't reveal if email exists or not
+    return {
+      message:
+        "If an account with this email exists, you will receive a password reset OTP",
+    };
   }
 
   // Generate OTP
@@ -165,13 +169,50 @@ export const forgotPassword = async (
   user.resetPasswordOtpExpiry = otpExpiry;
   await user.save();
 
-  // TODO: Send OTP via email service
-  // In production, implement proper email service
-  // console.log(`Password reset OTP for ${email}: ${otp}`);
+  // Send OTP via email service
+  try {
+    const emailSent = await emailService.sendOTPEmail(
+      email,
+      otp,
+      user.username
+    );
 
-  return {
-    message: "Password reset OTP sent to your email",
-  };
+    if (!emailSent) {
+      AppLogger.error("Failed to send OTP email", { email, userId: user._id });
+      throw new ApiError(
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        "Failed to send email. Please try again."
+      );
+    }
+
+    AppLogger.info("Password reset OTP sent", {
+      email,
+      userId: user._id,
+      otpExpiry,
+    });
+
+    return {
+      message: "Password reset OTP sent to your email",
+    };
+  } catch (error) {
+    // Clear OTP if email sending fails
+    user.resetPasswordOtp = undefined;
+    user.resetPasswordOtpExpiry = undefined;
+    await user.save();
+
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    AppLogger.error(
+      "Email service error during forgot password",
+      error as Error
+    );
+    throw new ApiError(
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      "Unable to send email at this time. Please try again later."
+    );
+  }
 };
 
 export const verifyOtp = async (
@@ -230,6 +271,26 @@ export const resetPassword = async (
     // Update password
     user.password = hashedPassword;
     await user.save();
+
+    // Send password reset confirmation email
+    try {
+      await emailService.sendPasswordResetConfirmation(
+        user.email,
+        user.username
+      );
+    } catch (error) {
+      // Don't fail the password reset if email fails
+      AppLogger.error("Failed to send password reset confirmation email", {
+        userId: user._id,
+        email: user.email,
+        error,
+      });
+    }
+
+    AppLogger.auth("Password reset successful", user._id.toString(), {
+      email: user.email,
+      timestamp: new Date(),
+    });
 
     return {
       message: "Password reset successfully",

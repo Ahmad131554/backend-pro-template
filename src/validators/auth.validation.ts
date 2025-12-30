@@ -29,19 +29,6 @@ export const registerRules: ValidationChain[] = [
     .bail()
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
-
-  body("role")
-    .optional()
-    .isString()
-    .withMessage("Role must be a string")
-    .bail()
-    .trim()
-    .notEmpty()
-    .withMessage("Role cannot be empty if provided")
-    .bail()
-    .toLowerCase()
-    .isIn(["user", "admin"])
-    .withMessage("Role must be either 'user' or 'admin'"),
 ];
 
 export const loginRules: ValidationChain[] = [
@@ -113,23 +100,10 @@ export const resetPasswordRules: ValidationChain[] = [
     .bail()
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long")
-    .bail()
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage(
-      "Password must contain at least one uppercase letter, one lowercase letter, and one number"
-    ),
-
-  body("confirmPassword")
-    .isString()
-    .withMessage("Confirm password must be a string")
-    .bail()
-    .notEmpty()
-    .withMessage("Confirm password cannot be empty")
-    .bail()
-    .custom((value: any, { req }) => {
-      if (value !== (req as any).body?.newPassword) {
-        throw new Error("Passwords do not match");
-      }
-      return true;
-    }),
+    .bail(),
 ];
+
+// .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+//     .withMessage(
+//       "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+//     ),

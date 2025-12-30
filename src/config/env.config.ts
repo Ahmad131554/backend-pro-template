@@ -13,4 +13,13 @@ export const env = cleanEnv(process.env, {
 
   JWT_SECRET: str(),
   JWT_RESET_SECRET: str(),
+
+  // Email configuration
+  SMTP_HOST: str({ default: "smtp.gmail.com" }),
+  SMTP_PORT: str({ default: "587" }),
+  SMTP_USER: str(),
+  SMTP_PASS: str(),
+  SMTP_FROM_NAME: str({ default: "Your App" }),
+  SMTP_FROM_EMAIL: str(),
+  SMTP_SECURE: str({ default: "false" }),
 });
